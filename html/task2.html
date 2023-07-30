@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Information</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        main {
+            text-align: center;
+        }
+
+        section {
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow: auto;
+        }
+
+        footer {
+            text-align: center;
+            position: fixed;
+            margin-top: 20px;
+            color: #888;
+            bottom: 0px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Weather Information</h1>
+        <h2>Ho Chi Minh City</h2>
+    </header>
+    <main>
+        <section>
+            <table>
+                <thead id="thead">
+                    <tr>
+                        <th>Date</th>
+
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <tr>
+                        <td colspan="24"><span>Loading...</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 WeatherApp. All rights reserved.</p>
+    </footer>
+    <script type="text/javascript" src="assets/jquery.js"></script>
+    <script>
+        const API_URI = "https://localhost:7202"
+        const API_GetData = `${API_URI}/api/weather?latitude={0}&longitude={1}`
+        $(document).ready(async () => {
+            for (let i = 0; i < 24; i++) {
+                $('#thead tr').append(`<th>${i}:00</th>`)
+            }
+            await LoadData();
+        })
+        async function LoadData() {
+            var rs = await fetch("https://localhost:7202/api/weather?latitude=10.762622&longitude=106.660172");
+            var data = await rs.json();
+            var times = data.hourly.time
+            var temperature_2ms = data.hourly.temperature_2m
+            let firstDate = new Date(times[0])
+            let lastDate = new Date(times[times.length - 1])
+            let totalDays = Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 3600 * 24));
+            $('#tbody').empty();
+            for (let i = 0; i < totalDays; i++) {
+                let indexs = times.filter(x => new Date(x).getDate() == firstDate.getDate());
+                let temperatures = ``
+                for (let i = 0; i < 24; i++) {
+                    let indexOfData = times.indexOf(indexs[i]);
+                    let data = temperature_2ms[indexOfData];
+                    temperatures += `<td>${data}</td>`
+                }
+                let tr = `
+                    <tr>
+                        <td>${parseDate(firstDate)}</th>
+                        ${temperatures}
+                    </tr>`
+                $('#tbody').append(tr);
+                firstDate = addDays(firstDate, 1)
+            }
+
+        }
+        function addDays(date, days) {
+            var result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+        function parseDate(today) {
+            const yyyy = today.getFullYear();
+            let mm = today.getMonth() + 1; // Months start at 0!
+            let dd = today.getDate();
+            if (dd < 10) dd = '0' + dd;
+            if (mm < 10) mm = '0' + mm;
+            return dd + '/' + mm + '/' + yyyy;
+        }
+    </script>
+</body>
+
+</html>
